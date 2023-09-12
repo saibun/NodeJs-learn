@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Var Problem</title>
+</head>
+<body>
+	<p id="demo"></p>
+	<script type="text/javascript" src="./script1.js">
+		//we link script1 where only variable a define 
+	</script>
+	<script type="text/javascript" src="./script2.js">
+		//we link script2 where only variable b define 
+	</script>
+	<script type="text/javascript" src="./script3.js">
+		//we link script3 where  variable c define and it is sum of a and b variable. so we can see this is possible only because of a and b both are save in window object.
+
+		//it is a problematic sitution because any one can use same variable with different value, that why people prefer using let and const
+		//but using let we may not re declere but we can reassign value so the problem is still on in this case
+		
+	</script>
+
+</body>
+</html>
