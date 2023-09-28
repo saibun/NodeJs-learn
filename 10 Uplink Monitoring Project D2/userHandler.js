@@ -29,6 +29,7 @@ handler.userHandler = (requestProperties,callback)=>{
 //scaffolding for handling methods
 handler._user={};
 
+//@TODO: Authentication
 handler._user.get = (requestProperties,callback)=>{
 	//check query string is phone or not.
 	const phone = typeof (requestProperties['queryStringObj']['phone']) === 'string' && requestProperties['queryStringObj']['phone'].trim().length === 10 ? requestProperties['queryStringObj']['phone'] : false;
@@ -107,6 +108,7 @@ handler._user.post = (requestProperties,callback)=>{
 
 	
 }
+//@TODO: Authentication
 handler._user.put = (requestProperties,callback)=>{
 	const firstName = typeof (requestProperties['postBody']['firstname']) === 'string' && requestProperties['postBody']['firstname'].trim().length > 0 ? requestProperties['postBody']['firstname'] : false;
 
@@ -183,10 +185,42 @@ handler._user.put = (requestProperties,callback)=>{
 
 	
 }
+
+//@TODO: Authentication
 handler._user.delete = (requestProperties,callback)=>{
-	callback(200,{
-			message: 'delete method',
+	const phone = typeof requestProperties['queryStringObj']['phone'] === 'string' && requestProperties['queryStringObj']['phone'].length === 10 ? requestProperties['queryStringObj']['phone']:false;
+
+	if(phone){
+		lib.dataRead('users',phone,(err,data)=>{
+			if(!err && data){
+				lib.delete('users',phone,(result)=>{
+					console.log("this is delete method result = "+result);
+					console.log(typeof result);
+					if(result ==="delete done"){
+						callback(200,{
+					 		message:'User successfully deleted!'
+					 	});
+					}else{
+						callback(500,{
+					 		message:'There is a server problem'
+					 	});
+					}
+				 	
+				 });
+
+			}else{
+				callback(404,{
+					message: 'Not Found'
+				});
+			}
+		})
+
+	}else{
+		callback(400,{
+			message: 'Invalid request'
 		});
+	}
+	
 }
 
 //export
