@@ -12,6 +12,7 @@ const url = require ('url');
 const {StringDecoder} = require('string_decoder');
 const routes = require(`${__dirname}/routesHandler.js`);
 const {notFoundHandler} = require(`${__dirname}/notFoundHandler.js`);
+const {parseJson} = require(`${__dirname}/Utilities.js`);
 
 //Module Scaffolding
 const req_res = {};
@@ -60,18 +61,7 @@ req_res.handelRequestResponse=(req,res)=>{
 		method,
 		headerObj
 	}
-	const chooseHandel = routes[trimmedPath]?routes[trimmedPath]:notFoundHandler;
-	chooseHandel(requestProperties,(statuscode,payload)=>{
-		 statuscode = typeof statuscode ==='number' ? statuscode :500;
-		 payload = typeof payload === 'object' ? payload : {};
-
-		let payloadString = JSON.stringify(payload);
-
-		//return the final response
-		res.writeHead(statuscode);
-		res.end(payloadString);
-
-	});
+	
 	
 
 
@@ -80,8 +70,21 @@ req_res.handelRequestResponse=(req,res)=>{
 	});
 	req.on('end',()=>{
 		result += decoder.end();
-		console.log(result);
-		res.end("hello Master!, start learning Node js with a beautiful day");
+		requestProperties['postBody'] = parseJson(result);
+		const chooseHandeler = routes[trimmedPath]?routes[trimmedPath]:notFoundHandler;
+		chooseHandeler(requestProperties,(statuscode,payload)=>{
+			 statuscode = typeof statuscode ==='number' ? statuscode :500;
+			 payload = typeof payload === 'object' ? payload : {};
+
+			let payloadString = JSON.stringify(payload);
+
+			//return the final response
+			res.setHeader('content-type','application/json');
+			res.writeHead(statuscode);
+			res.end(payloadString);
+
+		});
+		
 	});
 	
 };
