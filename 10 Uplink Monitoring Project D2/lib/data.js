@@ -95,7 +95,6 @@ lib.updateFile = (dir,filename,data,callback)=>{
 //delete a file
 lib.delete = (dir,filename,callback)=>{
 	fs.unlink(lib.createBasePath+dir+'/'+filename+'.json',(err)=>{
-		console.log("this is delete err ="+err);
 		if(!err){
 			callback("delete done");
 		}else{

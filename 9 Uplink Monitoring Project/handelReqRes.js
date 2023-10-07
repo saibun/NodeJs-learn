@@ -75,14 +75,14 @@ req_res.handelRequestResponse=(req,res)=>{
 	
 
 
-	req.on('data',(data)=>{
-		result += decoder.write(data);
-	});
-	req.on('end',()=>{
-		result += decoder.end();
-		console.log(result);
-		res.end("hello Master!, start learning Node js with a beautiful day");
-	});
+	// req.on('data',(data)=>{
+	// 	result += decoder.write(data);
+	// });
+	// req.on('end',()=>{
+	// 	result += decoder.end();
+	// 	console.log(result);
+	// 	res.end("hello Master!, start learning Node js with a beautiful day");
+	// });
 	
 };
 

@@ -8,10 +8,12 @@
 //Dependencies
 const {sampleHandler} = require(`${__dirname}/sampleHandler.js`);
 const {userHandler} = require(`${__dirname}/userHandler.js`);
+const {tokenHandler} = require(`${__dirname}/tokenHandler.js`);
 //Module scaffolding
 const route_handle={
 	sample: sampleHandler,
-	user: userHandler
+	user: userHandler,
+	token:tokenHandler
 };
 
 //module exports

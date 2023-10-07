@@ -9,7 +9,7 @@
 const lib = require('./lib/data.js');
 const {hash} = require('./utilities.js');
 const {parseJson} = require('./utilities.js');
-
+const tokenHandler = require('./tokenHandler.js');
 
 //Module scaffolding
 const handler = {};
@@ -29,23 +29,42 @@ handler.userHandler = (requestProperties,callback)=>{
 //scaffolding for handling methods
 handler._user={};
 
-//@TODO: Authentication
+
 handler._user.get = (requestProperties,callback)=>{
+
 	//check query string is phone or not.
 	const phone = typeof (requestProperties['queryStringObj']['phone']) === 'string' && requestProperties['queryStringObj']['phone'].trim().length === 10 ? requestProperties['queryStringObj']['phone'] : false;
 	if(phone){
-		//will read the file
-		lib.dataRead('users',phone,(err,data)=>{
-				if(!err && data){
-					const obj = {...parseJson(data)};
-					delete obj.password;
-					callback(200,obj);
+		// Authentication
+		//check token then give permission to data read
+		const tokenId = typeof requestProperties['headerObj']['tokenid'] === 'string' && requestProperties['headerObj']['tokenid'].length === 20 ? requestProperties['headerObj']['tokenid'] :false;
+		
+		if(tokenId){
+			tokenHandler._token.verify (tokenId,phone,(verify_opt)=>{
+				if(verify_opt){
+					//will read the file
+					lib.dataRead('users',phone,(err,data)=>{
+							if(!err && data){
+								const obj = {...parseJson(data)};
+								delete obj.password;
+								callback(200,obj);
 
-				
+							
+							}
+					});
 				}else{
-					callback(404,{err: 'Not Found' });
+					callback(404,{
+						message: 'tokenId miss match'
+					})
 				}
-		})
+			})
+
+		}else{
+			callback(404,{
+				message: 'Invalid token'
+			})
+		}
+		
 	}else{
 		callback(404,{
 			message:'User not found'
@@ -108,7 +127,6 @@ handler._user.post = (requestProperties,callback)=>{
 
 	
 }
-//@TODO: Authentication
 handler._user.put = (requestProperties,callback)=>{
 	const firstName = typeof (requestProperties['postBody']['firstname']) === 'string' && requestProperties['postBody']['firstname'].trim().length > 0 ? requestProperties['postBody']['firstname'] : false;
 
@@ -144,32 +162,50 @@ handler._user.put = (requestProperties,callback)=>{
 		})
 		*/
 		if(firstName || lastName || password || term_Condtion){
-			lib.dataRead('users',phone,(err,data)=>{
-				const updatData = {...parseJson(data)};
-				if(!err && updatData){
-					if(firstName){
-						updatData.firstName = firstName;
-					}
-					if(lastName){
-						updatData.lastName = lastName;
-					}
-					if(password){
-						updatData.password = hash(password);
-					}
-					if(term_Condtion){
-						updatData.term_Condtion = term_Condtion;
-					}
-					lib.updateFile('users',phone,updatData,(opt)=>{
-						callback(200,{
-							message: 'File update successfully'
+
+			// Authentication
+			//check token then give permission to data read
+			const tokenId = typeof requestProperties['headerObj']['tokenid'] === 'string' && requestProperties['headerObj']['tokenid'].length === 20 ? requestProperties['headerObj']['tokenid'] :false;
+			if(tokenId){
+				tokenHandler._token.verify (tokenId,phone,(verify_opt)=>{
+				if(verify_opt){
+					//will read the file
+					lib.dataRead('users',phone,(err,data)=>{
+					const updatData = {...parseJson(data)};
+					if(!err && updatData){
+						if(firstName){
+							updatData.firstName = firstName;
+						}
+						if(lastName){
+							updatData.lastName = lastName;
+						}
+						if(password){
+							updatData.password = hash(password);
+						}
+						if(term_Condtion){
+							updatData.term_Condtion = term_Condtion;
+						}
+						lib.updateFile('users',phone,updatData,(opt)=>{
+							callback(200,{
+								message: 'File update successfully'
+							})
 						})
+					}
 					})
-
-
-
-
+					
+				}else{
+					callback(404,{
+						message: 'tokenId miss match'
+					})
 				}
 			})
+
+			}else{
+				callback(404,{
+						message: 'Invalid token'
+					})
+			}
+			
 		}else{
 			callback(404,{
 				message: 'Not Found',
@@ -191,30 +227,57 @@ handler._user.delete = (requestProperties,callback)=>{
 	const phone = typeof requestProperties['queryStringObj']['phone'] === 'string' && requestProperties['queryStringObj']['phone'].length === 10 ? requestProperties['queryStringObj']['phone']:false;
 
 	if(phone){
-		lib.dataRead('users',phone,(err,data)=>{
-			if(!err && data){
-				lib.delete('users',phone,(result)=>{
-					console.log("this is delete method result = "+result);
-					console.log(typeof result);
-					if(result ==="delete done"){
-						callback(200,{
-					 		message:'User successfully deleted!'
+		// Authentication
+		//check token then give permission to data read
+		const tokenId = typeof requestProperties['headerObj']['tokenid'] === 'string' && requestProperties['headerObj']['tokenid'].length === 20 ? requestProperties['headerObj']['tokenid'] :false;
+		
+		if(tokenId){
+			tokenHandler._token.verify (tokenId,phone,(verify_opt)=>{
+				if(verify_opt){
+					lib.dataRead('users',phone,(err,data)=>{
+					if(!err && data){
+						lib.delete('users',phone,(result)=>{
+							if(result ==="delete done"){
+								callback(200,{
+							 		message:'User successfully deleted!'
+							 	});
+							}else{
+								callback(500,{
+							 		message:'There is a server problem'
+							 	});
+							}
+						 	
+						 });
+						lib.delete('token',tokenId,(result)=>{
+						if(result ==="delete done"){
+							console.log('token file deleted');
+						}else{
+							console.log('token file delete failed');
+						}
+					 	
 					 	});
+
 					}else{
-						callback(500,{
-					 		message:'There is a server problem'
-					 	});
+						callback(404,{
+							message: 'Not Found'
+						});
 					}
-				 	
-				 });
+					})
 
-			}else{
-				callback(404,{
-					message: 'Not Found'
-				});
-			}
-		})
+					
+				}else{
+					callback(404,{
+						message: 'tokenId miss match'
+					})
 
+				}
+			})
+		}else{
+			callback(404,{
+				message: 'Invalid token'
+			})
+
+		}
 	}else{
 		callback(400,{
 			message: 'Invalid request'

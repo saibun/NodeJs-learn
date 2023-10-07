@@ -10,6 +10,6 @@ const fs = require('fs');
 var read_a_file = fs.createReadStream(__dirname+'/bigdata.txt');
 
 read_a_file.on('data',(data)=>{
-	console.log(data);
+	console.log(data.toString());
 })
 console.log("hello");
