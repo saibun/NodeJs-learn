@@ -70,6 +70,7 @@ req_res.handelRequestResponse=(req,res)=>{
 	});
 	req.on('end',()=>{
 		result += decoder.end();
+		//parseJson convert the result(a Json object) into an Javascript object.
 		requestProperties['postBody'] = parseJson(result);
 		const chooseHandeler = routes[trimmedPath]?routes[trimmedPath]:notFoundHandler;
 		chooseHandeler(requestProperties,(statuscode,payload)=>{

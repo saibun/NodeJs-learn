@@ -9,11 +9,13 @@
 const {sampleHandler} = require(`${__dirname}/sampleHandler.js`);
 const {userHandler} = require(`${__dirname}/userHandler.js`);
 const {tokenHandler} = require(`${__dirname}/tokenHandler.js`);
+const {checkHandler} = require(`${__dirname}/checkHandler.js`);
 //Module scaffolding
 const route_handle={
 	sample: sampleHandler,
 	user: userHandler,
-	token:tokenHandler
+	token:tokenHandler,
+	check: checkHandler
 };
 
 //module exports
