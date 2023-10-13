@@ -136,5 +136,134 @@ handler._check.post=(requestProperties,callback)=>{
 	}
 }
 
+//In get method we fetch the check file by given checkid
+handler._check.get = (requestProperties,callback)=>{
+	const checkid = typeof requestProperties['queryStringObj']['id'] === 'string' && requestProperties['queryStringObj']['id'].trim().length === 20 ? requestProperties['queryStringObj']['id'] : false;
+	if(checkid){
+		const tokenid = typeof requestProperties['headerObj']['tokenid'] === 'string' && requestProperties['headerObj']['tokenid'].length === 20 ? requestProperties['headerObj']['tokenid'] :false;
+		if(tokenid){
+			lib.dataRead('check',checkid,(err,data)=>{
+				if(!err && data){
+					const checkobj = {...parseJson(data)};
+					tokenHandler._token.verify(tokenid,checkobj['phone'],(verify_token)=>{
+						if(verify_token){
+							callback(200, checkobj)
+
+						}else{
+							callback(400,{
+								message: " token verification failed"
+							})
+						}
+
+					})
+
+				}else{
+					callback(400,{
+						message: "File not found"
+					})
+				}
+			})
+
+		}else{
+			callback(400,{
+				message:"Invalid token"
+			})
+		}
+
+	}else{
+		callback(400,{
+			message: "Invalid checkid"
+		})
+	}
+}
+
+//In put method we update check file monitoring through checkid
+handler._check.put = (requestProperties,callback)=>{
+	//Id verification first
+	const checkid = typeof requestProperties['postBody']['id'] === 'string' && requestProperties['postBody']['id'].trim().length === 20 ? requestProperties['postBody']['id'] : false;
+
+	//update properties --->
+	const protocal = typeof requestProperties['postBody']['protocal'] === 'string' && ['http','https'].includes(requestProperties['postBody']['protocal']) ? requestProperties['postBody']['protocal'] : false;
+
+	const url = typeof requestProperties['postBody']['url'] === 'string' && requestProperties['postBody']['url'].length > 1  ? requestProperties['postBody']['url'] : false;
+
+
+	const inp_method = typeof requestProperties['postBody']['method'] === 'string' && ['get','put','post','delete'].includes(requestProperties['postBody']['method']) ? requestProperties['postBody']['method'] : false;
+
+	const status = typeof requestProperties['postBody']['status'] === 'object' && Array.isArray(requestProperties['postBody']['status']) ? requestProperties['postBody']['status'] : false;
+
+	const duration = typeof requestProperties['postBody']['time'] === 'number' && requestProperties['postBody']['time']>= 1 && requestProperties['postBody']['time'] <= 5 ? requestProperties['postBody']['time']:false;
+
+	if(checkid){
+		if(protocal || url || inp_method || status || duration){
+			lib.dataRead('check',checkid,(err,data)=>{
+				const checkobj = {...parseJson(data)};
+				if(!err && data){
+					const tokenid = typeof requestProperties['headerObj']['tokenid'] === 'string' && requestProperties['headerObj']['tokenid'].length === 20 ? requestProperties['headerObj']['tokenid'] :false;
+					if(tokenid){
+						tokenHandler._token.verify(tokenid,checkobj['phone'],(verify_token)=>{
+							if(verify_token){
+								if(protocal){
+									checkobj.protocal = protocal;
+								}
+								if(url){
+									checkobj.url = url;
+								}
+								if(inp_method){
+									checkobj.inp_method = inp_method;
+								}
+								if(status){
+									checkobj.status = status;
+								}
+								if(duration){
+									checkobj.duration = duration;
+								}
+								lib.updateFile('check',checkid,checkobj,(opt)=>{
+									if(opt === 'fs close done'){
+										callback(200,{
+												message: "update done."
+											})
+									}else{
+										callback(400,{
+											message: "failed to update file"
+										})
+									}
+								})
+
+							}else{
+								callback(400,{
+									message: "toke verification failed"
+								})
+							}
+
+						})
+
+					}else{
+						callback(400,{
+							message: "Invalid token"
+						})
+					}
+
+
+				}else{
+					callback(400,{
+						message: "id mismatch"
+					})
+				}
+			})
+		}else{
+			callback(400,{
+				message: "minimum one property required"
+			})
+		}
+	}else{
+		callback(400,{
+			message: "Invalid Id"
+		})
+	}
+
+}
+
+
 //export
 module.exports = handler;
